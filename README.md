@@ -4,7 +4,7 @@ A focused web scraping tool designed to extract articles from a specific website
 
 ## 🎯 Project Overview
 
-This tool scrapes articles from multiple websites and saves them as organized files in a structured directory format. Initially targeting Wired.com's satellites section, it's designed for easy expansion to additional websites. The scraper runs autonomously on a schedule, making it perfect for continuous content monitoring.
+This tool scrapes articles from multiple websites and saves them as organized files in a structured directory format. Currently targeting TechCrunch's space section, it's designed for easy expansion to additional websites. The scraper runs autonomously on a schedule, making it perfect for continuous content monitoring.
 
 ## 🏗️ Architecture Plan
 
@@ -43,7 +43,8 @@ ai_scraper/
 ├── scraper/
 │   ├── __init__.py
 │   ├── base_scraper.py
-│   └── website_scraper.py
+│   ├── techcrunch_scraper.py
+│   └── wired_scraper.py
 ├── processor/
 │   ├── __init__.py
 │   ├── article_parser.py
@@ -68,34 +69,34 @@ ai_scraper/
 
 ## 🚀 Implementation Plan
 
-### Phase 1: Foundation Setup
-- [ ] Set up project structure and virtual environment
-- [ ] Install required dependencies (requests, BeautifulSoup4, etc.)
-- [ ] Create configuration system for target website
-- [ ] Implement basic logging
+### Phase 1: Foundation Setup ✅
+- [x] Set up project structure and virtual environment
+- [x] Install required dependencies (requests, BeautifulSoup4, etc.)
+- [x] Create configuration system for target website
+- [x] Implement basic logging
 
-### Phase 2: Core Scraping
-- [ ] Develop base scraper class with common functionality
-- [ ] Implement website-specific scraper
-- [ ] Add rate limiting and respectful crawling practices
-- [ ] Handle different article URL patterns
+### Phase 2: Core Scraping ✅
+- [x] Develop base scraper class with common functionality
+- [x] Implement website-specific scraper (TechCrunch)
+- [x] Add rate limiting and respectful crawling practices
+- [x] Handle different article URL patterns
 
-### Phase 3: Content Processing
-- [ ] Build article parser to extract title, content, metadata
-- [ ] Implement content cleaning (remove ads, navigation, etc.)
-- [ ] Add support for different content formats
+### Phase 3: Content Processing ✅
+- [x] Build article parser to extract title, content, metadata
+- [x] Implement content cleaning (remove ads, navigation, etc.)
+- [x] Add support for different content formats
 
-### Phase 4: Storage System
-- [ ] Create directory organization system
-- [ ] Implement file naming conventions
-- [ ] Add duplicate detection and handling
-- [ ] Support multiple output formats (markdown, HTML, JSON)
+### Phase 4: Storage System ✅
+- [x] Create directory organization system
+- [x] Implement file naming conventions
+- [x] Add duplicate detection and handling
+- [x] Support multiple output formats (markdown, JSON)
 
-### Phase 5: Enhanced Features
-- [ ] Add scheduling/automation capabilities
-- [ ] Implement progress tracking and resumption
-- [ ] Add article filtering and search functionality
-- [ ] Create summary reports
+### Phase 5: Automation & Deployment ✅
+- [x] Add GitHub Actions workflow for automation
+- [x] Implement weekly scheduling
+- [x] Automatic commit and push of scraped articles
+- [x] Manual trigger capability
 
 ## 🛠️ Technical Requirements
 
@@ -114,46 +115,50 @@ ai_scraper/
 - Handle dynamic content (if needed)
 - Monitor for anti-bot measures
 
-## 📋 Usage (Planned)
+## 📋 Usage
 
-### Basic Usage
+### Running the Scraper
 ```bash
+# Activate virtual environment (if used)
+source .venv/bin/activate
+
 # Scrape articles from configured website
-python main.py scrape
-
-# Scrape with custom parameters
-python main.py scrape --max-articles 50 --category tech
-
-# List scraped articles
-python main.py list
-
-# Search scraped articles
-python main.py search "keyword"
+python main.py
 ```
 
 ### Configuration
 ```python
 # config/settings.py
-TARGET_WEBSITE = "https://www.wired.com/tag/satellites/"
-OUTPUT_DIRECTORY = "output/articles"
-MAX_ARTICLES_PER_RUN = 50
-DELAY_BETWEEN_REQUESTS = 3  # seconds (respectful to Wired)
-ARTICLE_FORMATS = ["markdown", "json"]
-USER_AGENT = "AI Scraper Bot 1.0 (Educational/Research Purpose)"
+WEBSITE_CONFIGS = [
+    "techcrunch_space": WebsiteConfig(
+        name="TechCrunch - Space",
+        base_url="https://techcrunch.com",
+        article_list_url="https://techcrunch.com/category/space/",
+        article_selectors={
+            "title": "h1",
+            "author": ".byline-author a",
+            "date": "time[datetime]",
+            "content": ".entry-content",
+            "article_links": "a[href*='/202']",
+        },
+        max_articles=25,
+        delay_between_requests=3.0,
+        enabled=True
+    ),
+]
 ```
 
 ## 📊 Output Structure
 
-Articles will be organized as follows:
+Articles are organized as follows:
 ```
 output/articles/
-├── 2024/
-│   ├── 01/
+├── [year]/
+│   ├── [month]/
 │   │   ├── article-title-1.md
 │   │   ├── article-title-1.json
 │   │   └── article-title-2.md
-│   └── 02/
-│       └── ...
+│   └── ...
 ├── metadata.json
 └── scraping_log.txt
 ```
@@ -166,10 +171,53 @@ output/articles/
 - **Content filtering rules**
 - **Directory organization patterns**
 
-## 🚀 Deployment Options
+## 🤖 Automated Deployment (GitHub Actions)
 
-### Cloud Deployment (Recommended)
-- **GitHub Actions**: Free scheduled execution with GitHub repos
+### Current Setup ✅
+The scraper is fully automated using GitHub Actions and runs:
+- **Schedule**: Every Monday at 9:00 AM UTC
+- **Manual Trigger**: Available via GitHub web interface or CLI
+- **Auto-Commit**: New articles are automatically committed to the repository
+
+### Managing the Automation
+
+#### View Recent Runs
+```bash
+# View workflow runs
+gh run list --workflow="scraper.yml"
+
+# View detailed run information
+gh run view [RUN_ID]
+```
+
+#### Manual Trigger
+```bash
+# Trigger scraper manually
+gh workflow run "Web Scraper - Weekly Run"
+
+# Via GitHub web interface
+# Go to Actions tab → Web Scraper - Weekly Run → Run workflow
+```
+
+#### Monitor Results
+- **GitHub Actions**: https://github.com/iKarolusMagnus/ai_scraper/actions
+- **New Articles**: Check the `output/articles/` directory after each run
+- **Commit History**: Each run creates a new commit with scraped articles
+
+### Changing the Schedule
+Edit `.github/workflows/scraper.yml` and modify the cron expression:
+```yaml
+schedule:
+  - cron: '0 9 * * 1'  # Every Monday at 9 AM UTC
+  # Examples:
+  # - cron: '0 6 * * *'    # Daily at 6 AM UTC
+  # - cron: '0 12 * * 0'   # Every Sunday at noon UTC
+  # - cron: '0 0 1 * *'    # First day of each month
+```
+
+## 🚀 Alternative Deployment Options
+
+### Other Cloud Options
 - **AWS Lambda + EventBridge**: Serverless scheduled execution
 - **Google Cloud Functions + Scheduler**: Serverless with Google Cloud
 - **Heroku Scheduler**: Simple add-on for Heroku apps
@@ -211,11 +259,11 @@ output/articles/
 3. Begin with Phase 1 implementation
 4. Test with a small subset of articles first
 
-### Target Website: Wired.com Satellites Section
-- **URL**: https://www.wired.com/tag/satellites/
-- **Focus**: Articles about satellites, space technology, and related topics
+### Target Website: TechCrunch Space Section
+- **URL**: https://techcrunch.com/category/space/
+- **Focus**: Articles about space industry, technology, and startups
 - **Content Type**: Technology journalism and analysis
-- **Update Frequency**: Regular (daily/weekly)
+- **Update Frequency**: Latest updates once a week (every Monday)
 
 ### Content Extraction Goals
 - Article title and subtitle
