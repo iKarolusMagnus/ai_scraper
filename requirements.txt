@@ -1,4 +1,8 @@
-# Core web scraping dependencies
+# Core web scraping dependencies - Scrapy framework
+scrapy>=2.13.0
+scrapy-user-agents>=0.1.1
+
+# Backup dependencies for direct scraping (fallback)
 requests>=2.31.0
 beautifulsoup4>=4.12.0
 lxml>=4.9.0
