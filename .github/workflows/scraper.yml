@@ -6,6 +6,9 @@ on:
     - cron: '0 9 * * 1'
   workflow_dispatch:  # Allow manual triggering
 
+permissions:
+  contents: write  # Allow the action to push to the repository
+
 jobs:
   scrape:
     runs-on: ubuntu-latest
@@ -30,9 +33,15 @@ jobs:
       run: python main.py
     
     - name: Commit and push scraped articles
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add output/articles/
-        git commit -m "Weekly scrape: $(date +'%Y-%m-%d %H:%M:%S')" || exit 0
-        git push
+        if git diff --staged --quiet; then
+          echo "No new articles to commit"
+        else
+          git commit -m "Weekly scrape: $(date +'%Y-%m-%d %H:%M:%S')"
+          git push
+        fi
